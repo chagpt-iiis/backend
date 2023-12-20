@@ -1,0 +1,39 @@
+diff --git a/src/address/mod.rs b/src/address/mod.rs
+index 31dc846..6f6bb27 100644
+--- a/src/address/mod.rs
++++ b/src/address/mod.rs
+@@ -97,20 +97,21 @@ impl<A: Actor> Addr<A> {
+     /// The message is always queued, even if the mailbox for the receiver is full. If the mailbox
+     /// is closed, the message is silently dropped.
+     #[inline]
+-    pub fn do_send<M>(&self, msg: M)
++    pub fn do_send<M>(&self, msg: M) -> Result<(), SendError<M>>
+     where
+         M: Message + Send,
+         M::Result: Send,
+         A: Handler<M>,
+         A::Context: ToEnvelope<A, M>,
+     {
+-        let _ = self.tx.do_send(msg);
++        self.tx.do_send(msg)
+     }
+ 
+     /// Tries to send a message.
+     ///
+     /// This method fails if actor's mailbox is full or closed. This
+     /// method registers the current task in the receiver's queue.
++    #[inline]
+     pub fn try_send<M>(&self, msg: M) -> Result<(), SendError<M>>
+     where
+         M: Message + Send + 'static,
+@@ -271,8 +272,8 @@ where
+     ///
+     /// The message is always queued, even if the mailbox for the receiver is full. If the mailbox
+     /// is closed, the message is silently dropped.
+-    pub fn do_send(&self, msg: M) {
+-        let _ = self.tx.do_send(msg);
++    pub fn do_send(&self, msg: M) -> Result<(), SendError<M>> {
++        self.tx.do_send(msg)
+     }
+ 
+     /// Attempts to send a message.
