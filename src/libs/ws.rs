@@ -79,11 +79,14 @@ where
     #[inline]
     fn started(&mut self, ctx: &mut Self::Context) {
         let addr = ctx.address();
-        self.app.started(ctx, hack::get(&addr));
+        let hash = hack::get(&addr);
         if self.with_engine_io {
             ctx.text(r#"0{"pingInterval":18320,"pingTimeout":10240,"upgrades":[]}"#);
+            self.app.started(ctx, hash);
             self.refresh_ping(ctx);
             self.refresh_timeout(ctx);
+        } else {
+            self.app.started(ctx, hash);
         }
     }
 
@@ -125,13 +128,15 @@ where
                     let b: &[u8] = &bin;
                     self.tmp_buffer.extend_from_slice(&b[..b.len().min(r)]);
                     let v = core::mem::take(&mut self.tmp_buffer);
-                    if self.is_tmp_buffer_string {
+                    if !self.is_tmp_buffer_string {
+                        self.app.handle_binary(ctx, v.into());
+                    } else if let [b'4', v @ ..] = v.as_slice() {
                         self.app.handle_text(
                             ctx,
-                            Utf8Chunks::new(&v).next().map_or("", |chunk| chunk.valid()),
+                            Utf8Chunks::new(v).next().map_or("", |chunk| chunk.valid()),
                         );
                     } else {
-                        self.app.handle_binary(ctx, v.into());
+                        // not handled.
                     }
                 }
             },

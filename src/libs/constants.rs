@@ -15,4 +15,5 @@ pub const GLOBAL_INTERVAL: Duration = Duration::from_secs(
 pub const PING_INTERVAL: Duration = Duration::from_millis(18320);
 pub const PING_TIMEOUT: Duration = Duration::from_millis(28560);
 
+pub const ADMIN_SECRET: &str = include_str!("../../admin.secret");
 pub const EMITTER_SECRET: &str = include_str!("../../emitter.secret");

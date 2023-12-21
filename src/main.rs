@@ -73,6 +73,7 @@ async fn main() -> std::io::Result<()> {
     libs::logger::init();
 
     libs::db::init_db().await;
+    libs::chagpt::init().await;
 
     tokio::task::spawn(libs::db::expired_token_cleaner());
 

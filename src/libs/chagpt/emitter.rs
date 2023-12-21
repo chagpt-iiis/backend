@@ -3,9 +3,12 @@ use actix_web::web::Bytes;
 use actix_web_actors::ws;
 use parking_lot::RwLock;
 
-use crate::libs::{ws::{AppWsActor, WsActor}, constants::EMITTER_SECRET};
+use crate::libs::{
+    constants::EMITTER_SECRET,
+    ws::{AppWsActor, WsActor},
+};
 
-use super::danmaku::BroadcastDanmaku;
+use super::Emit;
 
 pub struct DanmakuEmitter;
 pub type DanmakuEmitterWs = WsActor<DanmakuEmitter>;
@@ -34,10 +37,11 @@ impl AppWsActor for DanmakuEmitter {
     fn handle_binary(&mut self, _: &mut DanmakuEmitterContext, _: Bytes) {}
 }
 
-impl Handler<BroadcastDanmaku> for DanmakuEmitterWs {
+impl Handler<Emit> for DanmakuEmitterWs {
     type Result = ();
 
-    fn handle(&mut self, msg: BroadcastDanmaku, ctx: &mut Self::Context) -> Self::Result {
+    #[inline]
+    fn handle(&mut self, msg: Emit, ctx: &mut Self::Context) -> Self::Result {
         ctx.text(msg.0);
     }
 }

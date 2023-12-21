@@ -24,7 +24,7 @@ pub async fn chagpt_admin(
 ) -> actix_web::Result<HttpResponse> {
     let mut res = ws::handshake(&req)?;
     Ok(res.streaming(ws::WebsocketContext::with_codec(
-        WsActor::new(ChaGPTAdminActor, true),
+        WsActor::new(ChaGPTAdminActor::default(), true),
         stream,
         Codec::new().max_size(0x7fff_ffff),
     )))

@@ -1,8 +1,5 @@
 use std::time::SystemTime;
 
-use bytestring::ByteString;
-use serde::Deserialize;
-
 use crate::libs::db::get_connection;
 
 const INSERT_DANMAKU: &str =
@@ -34,19 +31,4 @@ impl Danmaku {
             color,
         })
     }
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "type")]
-pub enum Message {
-    #[serde(rename = "propose")]
-    Propose { content: String, color: u32 },
-}
-
-#[derive(Clone)]
-#[repr(transparent)]
-pub struct BroadcastDanmaku(pub ByteString);
-
-impl actix::Message for BroadcastDanmaku {
-    type Result = ();
 }

@@ -1,2 +1,2 @@
-emitter.secret
+*.secret
 /target
