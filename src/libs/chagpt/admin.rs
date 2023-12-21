@@ -12,7 +12,7 @@ use crate::libs::{
 use super::{
     chagpt::ACTORS,
     emitter::CURRENT_EMITTER,
-    repertoire::{self, Program, Repertoire},
+    repertoire::{self, Program, Repertoire, REPERTOIRE},
     Emit,
 };
 
@@ -52,8 +52,16 @@ impl AppWsActor for ChaGPTAdminActor {
             if text.trim() == ADMIN_SECRET {
                 tracing::debug!(target: "ChaGPT-admin", "admin connected");
                 self.is_login = true;
-                ctx.text(format!("4{ADMIN_SECRET}"));
                 *CURRENT_ADMIN.write() = Some(ctx.address());
+                if let Some(r) = REPERTOIRE.read().as_ref()
+                    && let Ok(programs) = serde_json::to_string(&r.programs)
+                {
+                    let payload = format!(
+                        r#"4{{"type":"repertoire","programs":{programs},"current":{}}}"#,
+                        r.current,
+                    );
+                    ctx.text(payload);
+                }
             }
             return;
         }
