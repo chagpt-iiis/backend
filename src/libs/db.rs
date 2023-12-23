@@ -1,4 +1,4 @@
-use std::{future::Future, time::SystemTime};
+use std::future::Future;
 
 use bb8_postgres::{bb8, PostgresConnectionManager};
 use tokio_postgres::{
@@ -6,10 +6,7 @@ use tokio_postgres::{
     NoTls, Row,
 };
 
-use super::{
-    constants::{DB_CONNECTION_TIMEOUT, GLOBAL_EXPIRE_TIME, GLOBAL_INTERVAL},
-    response::StdError,
-};
+use super::{constants::DB_CONNECTION_TIMEOUT, response::StdError};
 
 pub type ConnectionManager = PostgresConnectionManager<NoTls>;
 pub type Pool = bb8::Pool<ConnectionManager>;
@@ -67,31 +64,6 @@ where
     row.try_get::<'a, usize, T>(idx)?
         .try_into()
         .map_err(|e| DBError::new(tokio_postgres::error::Kind::FromSql(idx), Some(Box::new(e))))
-}
-
-#[allow(clippy::cognitive_complexity)]
-pub async fn expired_token_cleaner() {
-    const SQL_CLEAN: &str = "delete from tokens where token_latest < $1";
-    loop {
-        tracing::debug!(target: "expired-token-cleaner", "start clean");
-
-        let t = SystemTime::now() - GLOBAL_EXPIRE_TIME;
-        match get_connection().await {
-            Err(e) => tracing::warn!(target: "expired-token-cleaner", bb8_error = ?e),
-            Ok(mut conn) => {
-                let e: DBResult<()> = try {
-                    let stmt = conn.prepare_static(SQL_CLEAN.into()).await?;
-                    let n = conn.execute(&stmt, &[&t]).await?;
-                    tracing::debug!(target: "expired-token-cleaner", "cleaned \x1b[32m{n}\x1b[0m tokens!");
-                };
-                if let Err(e) = e {
-                    tracing::warn!(target: "expired-token-cleaner", psql_error = ?e);
-                }
-            }
-        }
-
-        tokio::time::sleep(GLOBAL_INTERVAL).await;
-    }
 }
 
 #[repr(transparent)]

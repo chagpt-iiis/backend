@@ -43,8 +43,11 @@ impl AppWsActor for ChaGPTAdminActor {
         // TODO
     }
 
-    fn stopped(&mut self, _ctx: &mut ChaGPTAdminContext, _hash: u64) {
-        // TODO
+    fn stopped(&mut self, ctx: &mut ChaGPTAdminContext, _hash: u64) {
+        let mut guard = CURRENT_ADMIN.write();
+        if Some(ctx.address()) == *guard {
+            *guard = None;
+        }
     }
 
     fn handle_text(&mut self, ctx: &mut ChaGPTAdminContext, text: &str) {

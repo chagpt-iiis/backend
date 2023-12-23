@@ -68,26 +68,43 @@ mod models;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    use actix_web::{middleware, App, HttpServer};
+    use actix_web::{middleware, App, web, HttpServer};
 
     libs::logger::init();
 
     libs::db::init_db().await;
     libs::chagpt::init().await;
 
-    tokio::task::spawn(libs::db::expired_token_cleaner());
+    tokio::task::spawn(libs::eth::fetcher());
+
+    let json_config = web::JsonConfig::default()
+        .content_type(|_| true)
+        .content_type_required(false);
 
     let server = HttpServer::new(move || {
+        let cors = actix_cors::Cors::default()
+            .allow_any_origin()
+            .allow_any_method()
+            .allow_any_header()
+            .allow_private_network_access();
+
         App::new()
-        .wrap(middleware::NormalizePath::new(
-            middleware::TrailingSlash::MergeOnly,
-        ))
-        .wrap(middleware::Logger::new(
-            r#"%{009f34034b761c32384fde345378c488efc18c59}i %a "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#
-        ))
-        .service(api::chagpt::chagpt)
-        .service(api::chagpt::chagpt_admin)
-        .service(api::chagpt::emitter)
+            .app_data(json_config.clone())
+            .wrap(middleware::NormalizePath::new(
+                middleware::TrailingSlash::MergeOnly,
+            ))
+            .wrap(middleware::Logger::new(
+                r#"%{009f34034b761c32384fde345378c488efc18c59}i %a "%r" %s %b "%{Referer}i" "%{User-Agent}i" %T"#
+            ))
+            .service(api::chagpt::chagpt)
+            .service(api::chagpt::chagpt_admin)
+            .service(api::chagpt::emitter)
+            .service(
+                web::resource("/block")
+                    .guard(libs::request::POST_or_HEAD)
+                    .wrap(cors)
+                    .to(api::eth::block)
+            )
     });
 
     server.bind_uds("backend.sock")?.run().await

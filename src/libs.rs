@@ -1,7 +1,9 @@
 pub mod chagpt;
 pub mod constants;
 pub mod db;
+pub mod eth;
 pub mod logger;
+pub mod request;
 pub mod response;
 pub mod util;
 pub mod ws;
