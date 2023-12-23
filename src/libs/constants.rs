@@ -6,6 +6,8 @@ use core::time::Duration;
 use actix_web::web::Bytes;
 
 pub const BYTES_NULL: Bytes = Bytes::from_static(b"null");
+pub const BYTES_TRUE: Bytes = Bytes::from_static(b"true");
+pub const BYTES_FALSE: Bytes = Bytes::from_static(b"false");
 
 pub const DB_CONNECTION_TIMEOUT: Duration = Duration::from_secs(5);
 

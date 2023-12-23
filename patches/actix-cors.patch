@@ -1,0 +1,20 @@
+diff --git a/src/builder.rs b/src/builder.rs
+index a71a925..842ac71 100644
+--- a/src/builder.rs
++++ b/src/builder.rs
+@@ -87,6 +87,15 @@ pub struct Cors {
+     error: Option<Either<HttpError, CorsError>>,
+ }
+ 
++impl Clone for Cors {
++    fn clone(&self) -> Self {
++        Self {
++            inner: self.inner.clone(),
++            error: None,
++        }
++    }
++}
++
+ impl Cors {
+     /// Constructs a very permissive set of defaults for quick development. (Not recommended for
+     /// production use.)

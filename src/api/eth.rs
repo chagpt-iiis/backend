@@ -1,4 +1,4 @@
-use std::time::SystemTime;
+use std::{sync::atomic::Ordering, time::SystemTime};
 
 use actix_web::web::{self, Bytes};
 use bytes::Buf;
@@ -7,8 +7,8 @@ use serde::Deserialize;
 
 use crate::libs::{
     chagpt::{admin::CURRENT_ADMIN, Emit},
-    constants::{BYTES_NULL, LOTTERY_SECRET},
-    eth,
+    constants::{BYTES_FALSE, BYTES_NULL, BYTES_TRUE, LOTTERY_SECRET},
+    eth::{self, FETCHER_WORK},
 };
 
 #[derive(Deserialize)]
@@ -53,4 +53,26 @@ pub async fn block(web::Json(req): web::Json<BlockRequest>) -> Bytes {
     let mut payload = payload.0.into_bytes();
     payload.advance(1);
     payload
+}
+
+#[derive(Deserialize)]
+pub struct FetchRequest {
+    secret: String,
+    new: bool,
+}
+
+pub async fn fetch(web::Json(req): web::Json<FetchRequest>) -> Bytes {
+    let FetchRequest { secret, new } = req;
+
+    if secret != LOTTERY_SECRET {
+        return BYTES_NULL;
+    }
+
+    let old = FETCHER_WORK.swap(new, Ordering::SeqCst);
+
+    if old {
+        BYTES_TRUE
+    } else {
+        BYTES_FALSE
+    }
 }

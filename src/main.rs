@@ -102,8 +102,14 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::resource("/block")
                     .guard(libs::request::POST_or_HEAD)
-                    .wrap(cors)
+                    .wrap(cors.clone())
                     .to(api::eth::block)
+            )
+            .service(
+                web::resource("/fetch")
+                    .guard(libs::request::POST_or_HEAD)
+                    .wrap(cors)
+                    .to(api::eth::fetch)
             )
     });
 
